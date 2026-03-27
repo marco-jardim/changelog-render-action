@@ -1,0 +1,48 @@
+name: 'Changelog Render Action'
+description: 'Renders insights.v1.json into formatted changelog markdown (executive, technical, or minimal)'
+author: 'marco-jardim'
+
+branding:
+  icon: 'file-text'
+  color: 'blue'
+
+inputs:
+  insights_path:
+    description: 'Path to the insights.v1.json file produced by changelog-analyze-action'
+    required: true
+  template:
+    description: 'Template to use for rendering: executive, technical, or minimal'
+    required: false
+    default: 'executive'
+  output_path:
+    description: 'Output path for the rendered markdown file'
+    required: false
+    default: 'executive-changelog.md'
+  include_commit_list:
+    description: 'Whether to include the commit list section'
+    required: false
+    default: 'true'
+  include_file_evidence:
+    description: 'Whether to include notable files table with file evidence'
+    required: false
+    default: 'true'
+  date_format:
+    description: 'Date format string (YYYY-MM-DD, DD/MM/YYYY, MM/DD/YYYY)'
+    required: false
+    default: 'YYYY-MM-DD'
+  repo_url:
+    description: 'Repository URL for generating compare and file links (e.g. https://github.com/owner/repo)'
+    required: false
+    default: ''
+
+outputs:
+  report_path:
+    description: 'Path to the rendered markdown file'
+  report_content:
+    description: 'Full content of the rendered markdown file'
+  word_count:
+    description: 'Approximate word count of the rendered markdown'
+
+runs:
+  using: 'node20'
+  main: 'dist/index.js'

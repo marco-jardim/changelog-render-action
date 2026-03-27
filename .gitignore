@@ -1,0 +1,7 @@
+node_modules/
+coverage/
+*.js.map
+*.d.ts
+*.d.ts.map
+# Keep dist/ tracked (GitHub Actions requires it)
+# dist/
