@@ -21,8 +21,8 @@ These criteria must all pass before `v1.0.0` is tagged.
 
 ## Quality
 
-- [x] All 74 Jest tests pass with `npm test`
-- [x] `dist/index.js` builds successfully with `npm run build:bundle`
+- [x] All 74 Vitest tests pass with `npm test`
+- [x] `dist/index.js` builds successfully with `npm run build`
 - [x] TypeScript strict mode — no `as any`, `@ts-ignore`, `@ts-expect-error`
 - [x] No `node_modules/` in git history
 

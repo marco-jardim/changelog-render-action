@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [master]
   pull_request:
-    branches: [main]
+    branches: [master]
 
 jobs:
   test:
@@ -31,7 +31,7 @@ jobs:
         run: npm test
 
       - name: Build bundle
-        run: npm run build:bundle
+        run: npm run build
 
       - name: Verify dist/index.js exists
         run: test -f dist/index.js

@@ -255,7 +255,7 @@ This action expects a JSON file conforming to the `insights.v1.json` schema:
 2. Create a feature branch: `git checkout -b feat/my-feature`
 3. Make changes in `src/`
 4. Run `npm test` — all tests must pass
-5. Run `npm run build:bundle` — `dist/index.js` must build
+5. Run `npm run build` — `dist/index.js` must build
 6. Open a pull request
 
 ### Development
@@ -271,7 +271,7 @@ npm run test:watch
 npm run typecheck
 
 # Build for production
-npm run build:bundle
+npm run build
 ```
 
 ---

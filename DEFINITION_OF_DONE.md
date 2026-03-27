@@ -20,7 +20,7 @@ A feature or task is considered **done** when ALL of the following are true:
 
 ## Build
 
-- [x] `npm run build:bundle` succeeds and produces `dist/index.js`
+- [x] `npm run build` succeeds and produces `dist/index.js`
 - [x] `npx tsc --noEmit` passes with no type errors
 - [x] `dist/index.js` is committed and up-to-date with source
 
@@ -42,5 +42,5 @@ A feature or task is considered **done** when ALL of the following are true:
 - [x] `node_modules/` is in `.gitignore` and not tracked
 - [x] No secrets or credentials in any committed file
 - [x] `ACCEPTANCE_CRITERIA.md` reviewed and all boxes checked
-- [x] CI workflow passes on the main branch
+- [x] CI workflow passes on the master branch
 - [x] Release tag created (for releases): `gh release create vX.Y.Z`
