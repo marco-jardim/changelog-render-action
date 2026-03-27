@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Types for insights.v1.json schema (output of changelog-analyze-action)
  * and renderer configuration.

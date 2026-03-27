@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0
 import { InsightsV1, RenderConfig, TemplateType } from './types.js';
 import { renderExecutive } from './templates/executive.js';
 import { renderTechnical } from './templates/technical.js';

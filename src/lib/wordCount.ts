@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Computes an approximate word count for a markdown string.
  * Strips markdown syntax characters, then counts whitespace-delimited tokens.

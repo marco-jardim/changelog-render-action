@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0
 import { InsightsV1, RenderConfig, VALID_TEMPLATES, VALID_DATE_FORMATS } from '../types.js';
 
 export interface ValidationError {

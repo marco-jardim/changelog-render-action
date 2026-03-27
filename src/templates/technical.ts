@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0
 import { InsightsV1, RenderConfig } from '../types.js';
 import { formatDate, buildCompareUrl, shortSha } from '../lib/dateFormatter.js';
 
