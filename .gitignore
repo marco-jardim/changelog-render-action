@@ -5,3 +5,8 @@ coverage/
 *.d.ts.map
 # Keep dist/ tracked (GitHub Actions requires it)
 # dist/
+# tsc emit artifacts — esbuild handles bundling now
+dist/lib/
+dist/templates/
+dist/renderer.js
+dist/types.js
