@@ -21,7 +21,7 @@ function parseTemplate(value: string): TemplateType {
 }
 
 function parseDateFormat(value: string): DateFormatType {
-  const allowed: DateFormatType[] = ['YYYY-MM-DD', 'DD/MM/YYYY', 'MM/DD/YYYY'];
+  const allowed: DateFormatType[] = ['YYYY-MM-DD', 'DD/MM/YYYY', 'MM/DD/YYYY', 'MMMM D, YYYY'];
   if (allowed.includes(value as DateFormatType)) return value as DateFormatType;
   core.warning(`Unknown date_format "${value}", falling back to "YYYY-MM-DD"`);
   return 'YYYY-MM-DD';

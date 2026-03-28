@@ -19471,7 +19471,7 @@ function parseTemplate(value) {
   return "executive";
 }
 function parseDateFormat(value) {
-  const allowed = ["YYYY-MM-DD", "DD/MM/YYYY", "MM/DD/YYYY"];
+  const allowed = ["YYYY-MM-DD", "DD/MM/YYYY", "MM/DD/YYYY", "MMMM D, YYYY"];
   if (allowed.includes(value)) return value;
   warning(`Unknown date_format "${value}", falling back to "YYYY-MM-DD"`);
   return "YYYY-MM-DD";
