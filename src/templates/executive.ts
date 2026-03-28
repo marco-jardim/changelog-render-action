@@ -10,9 +10,6 @@ export function renderExecutive(insights: InsightsV1, config: RenderConfig): str
   const lines: string[] = [];
 
   // ── Header ──────────────────────────────────────────────────────────────────
-  lines.push(`# Changelog: ${insights.repo}`);
-  lines.push('');
-
   const dateFrom = formatDate(insights.date_from, config.dateFormat);
   const dateTo = formatDate(insights.date_to, config.dateFormat);
   lines.push(`**Date Range**: ${dateFrom} → ${dateTo}  `);
@@ -102,13 +99,8 @@ export function renderExecutive(insights: InsightsV1, config: RenderConfig): str
   if (config.includeFileEvidence && insights.notable_files.length > 0) {
     lines.push('## Notable Files');
     lines.push('');
-    lines.push('| File | Reason |');
-    lines.push('|------|--------|');
     for (const f of insights.notable_files) {
-      const filePath = config.repoUrl
-        ? `[${f.path}](${config.repoUrl.replace(/\/$/, '')}/blob/${insights.head_sha ?? 'main'}/${f.path})`
-        : `\`${f.path}\``;
-      lines.push(`| ${filePath} | ${f.reason} |`);
+      lines.push(`- **${f.path}** — ${f.reason}`);
     }
     lines.push('');
   }
@@ -117,15 +109,11 @@ export function renderExecutive(insights: InsightsV1, config: RenderConfig): str
   if (config.includeCommitList && insights.commits && insights.commits.length > 0) {
     lines.push('## Commits');
     lines.push('');
-    lines.push('| SHA | Message | Author | Date |');
-    lines.push('|-----|---------|--------|------|');
     for (const c of insights.commits) {
-      const shaDisplay = config.repoUrl
-        ? `[${shortSha(c.sha)}](${config.repoUrl.replace(/\/$/, '')}/commit/${c.sha})`
-        : `\`${shortSha(c.sha)}\``;
+      const sha = shortSha(c.sha);
       const date = formatDate(c.date, config.dateFormat);
-      const msg = c.message.replace(/\|/g, '\\|').replace(/\n.*/s, '');
-      lines.push(`| ${shaDisplay} | ${msg} | ${c.author} | ${date} |`);
+      const msg = c.message.replace(/\n.*/s, '');
+      lines.push(`- **${sha}** ${msg} (${c.author}, ${date})`);
     }
     lines.push('');
   }

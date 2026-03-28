@@ -22,6 +22,13 @@ export function formatDate(isoDate: string, format: DateFormatType): string {
       return `${dd}/${mm}/${yyyy}`;
     case 'MM/DD/YYYY':
       return `${mm}/${dd}/${yyyy}`;
+    case 'MMMM D, YYYY': {
+      const months = [
+        'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December',
+      ];
+      return `${months[d.getUTCMonth()]} ${d.getUTCDate()}, ${yyyy}`;
+    }
     default:
       return `${yyyy}-${mm}-${dd}`;
   }

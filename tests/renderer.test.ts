@@ -6,7 +6,8 @@ describe('renderer dispatcher', () => {
   it('dispatches to executive template', () => {
     const cfg: RenderConfig = { ...DEFAULT_CONFIG, template: 'executive' };
     const md = render(FULL_INSIGHTS, cfg);
-    expect(md).toContain('# Changelog: owner/repo');
+    expect(md).toContain('**Date Range**');
+    expect(md).not.toContain('# Changelog:');
   });
 
   it('dispatches to technical template', () => {

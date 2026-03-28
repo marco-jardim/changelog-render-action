@@ -5,7 +5,8 @@ import { RenderConfig } from '../src/types';
 describe('executive template', () => {
   it('renders repo name in the header', () => {
     const md = renderExecutive(FULL_INSIGHTS, DEFAULT_CONFIG);
-    expect(md).toContain('# Changelog: owner/repo');
+    expect(md).not.toContain('# Changelog:');
+    expect(md).toMatch(/^\*\*Date Range\*\*/);
   });
 
   it('renders date range with default YYYY-MM-DD format', () => {
@@ -52,17 +53,18 @@ describe('executive template', () => {
     expect(md).toContain('token refresh logic');
   });
 
-  it('renders notable files table with file links', () => {
+  it('renders notable files as bullet list', () => {
     const md = renderExecutive(FULL_INSIGHTS, DEFAULT_CONFIG);
     expect(md).toContain('## Notable Files');
-    expect(md).toContain('| File | Reason |');
-    expect(md).toContain('src/auth/oauth.ts');
+    expect(md).not.toContain('| File | Reason |');
+    expect(md).toContain('- **src/auth/oauth.ts**');
     expect(md).toContain('New OAuth2 handler');
   });
 
-  it('renders commit table when includeCommitList is true', () => {
+  it('renders commit list when includeCommitList is true', () => {
     const md = renderExecutive(FULL_INSIGHTS, DEFAULT_CONFIG);
     expect(md).toContain('## Commits');
+    expect(md).not.toContain('| SHA | Message | Author | Date |');
     expect(md).toContain('feat: add OAuth2 login');
   });
 

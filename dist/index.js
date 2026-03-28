@@ -19084,7 +19084,7 @@ var path = __toESM(require("path"));
 
 // src/types.ts
 var VALID_TEMPLATES = ["executive", "technical", "minimal"];
-var VALID_DATE_FORMATS = ["YYYY-MM-DD", "DD/MM/YYYY", "MM/DD/YYYY"];
+var VALID_DATE_FORMATS = ["YYYY-MM-DD", "DD/MM/YYYY", "MM/DD/YYYY", "MMMM D, YYYY"];
 
 // src/lib/validator.ts
 function validateInsights(data) {
@@ -19165,6 +19165,23 @@ function formatDate(isoDate, format) {
       return `${dd}/${mm}/${yyyy}`;
     case "MM/DD/YYYY":
       return `${mm}/${dd}/${yyyy}`;
+    case "MMMM D, YYYY": {
+      const months = [
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December"
+      ];
+      return `${months[d.getUTCMonth()]} ${d.getUTCDate()}, ${yyyy}`;
+    }
     default:
       return `${yyyy}-${mm}-${dd}`;
   }
@@ -19181,8 +19198,6 @@ function shortSha(sha) {
 // src/templates/executive.ts
 function renderExecutive(insights, config) {
   const lines = [];
-  lines.push(`# Changelog: ${insights.repo}`);
-  lines.push("");
   const dateFrom = formatDate(insights.date_from, config.dateFormat);
   const dateTo = formatDate(insights.date_to, config.dateFormat);
   lines.push(`**Date Range**: ${dateFrom} \u2192 ${dateTo}  `);
@@ -19253,24 +19268,19 @@ function renderExecutive(insights, config) {
   if (config.includeFileEvidence && insights.notable_files.length > 0) {
     lines.push("## Notable Files");
     lines.push("");
-    lines.push("| File | Reason |");
-    lines.push("|------|--------|");
     for (const f of insights.notable_files) {
-      const filePath = config.repoUrl ? `[${f.path}](${config.repoUrl.replace(/\/$/, "")}/blob/${insights.head_sha ?? "main"}/${f.path})` : `\`${f.path}\``;
-      lines.push(`| ${filePath} | ${f.reason} |`);
+      lines.push(`- **${f.path}** \u2014 ${f.reason}`);
     }
     lines.push("");
   }
   if (config.includeCommitList && insights.commits && insights.commits.length > 0) {
     lines.push("## Commits");
     lines.push("");
-    lines.push("| SHA | Message | Author | Date |");
-    lines.push("|-----|---------|--------|------|");
     for (const c of insights.commits) {
-      const shaDisplay = config.repoUrl ? `[${shortSha(c.sha)}](${config.repoUrl.replace(/\/$/, "")}/commit/${c.sha})` : `\`${shortSha(c.sha)}\``;
+      const sha = shortSha(c.sha);
       const date = formatDate(c.date, config.dateFormat);
-      const msg = c.message.replace(/\|/g, "\\|").replace(/\n.*/s, "");
-      lines.push(`| ${shaDisplay} | ${msg} | ${c.author} | ${date} |`);
+      const msg = c.message.replace(/\n.*/s, "");
+      lines.push(`- **${sha}** ${msg} (${c.author}, ${date})`);
     }
     lines.push("");
   }

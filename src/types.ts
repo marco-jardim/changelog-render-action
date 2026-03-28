@@ -40,7 +40,7 @@ export interface InsightsV1 {
 
 export type TemplateType = 'executive' | 'technical' | 'minimal';
 
-export type DateFormatType = 'YYYY-MM-DD' | 'DD/MM/YYYY' | 'MM/DD/YYYY';
+export type DateFormatType = 'YYYY-MM-DD' | 'DD/MM/YYYY' | 'MM/DD/YYYY' | 'MMMM D, YYYY';
 
 export interface RenderConfig {
   insightsPath: string;
@@ -59,4 +59,4 @@ export interface RenderResult {
 }
 
 export const VALID_TEMPLATES: TemplateType[] = ['executive', 'technical', 'minimal'];
-export const VALID_DATE_FORMATS: DateFormatType[] = ['YYYY-MM-DD', 'DD/MM/YYYY', 'MM/DD/YYYY'];
+export const VALID_DATE_FORMATS: DateFormatType[] = ['YYYY-MM-DD', 'DD/MM/YYYY', 'MM/DD/YYYY', 'MMMM D, YYYY'];

@@ -15,6 +15,10 @@ describe('formatDate', () => {
     expect(formatDate(isoDate, 'MM/DD/YYYY')).toBe('03/27/2026');
   });
 
+  it('formats in MMMM D, YYYY', () => {
+    expect(formatDate(isoDate, 'MMMM D, YYYY')).toBe('March 27, 2026');
+  });
+
   it('returns empty string for empty input', () => {
     expect(formatDate('', 'YYYY-MM-DD')).toBe('');
   });
