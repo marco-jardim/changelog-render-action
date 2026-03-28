@@ -61,7 +61,7 @@ describe('minimal template', () => {
   });
 
   it('renders without SHA ref when SHAs absent', () => {
-    const insights = { ...FULL_INSIGHTS, base_sha: undefined, head_sha: undefined };
+    const insights = { ...FULL_INSIGHTS, from_sha: '', to_sha: '' };
     const md = renderMinimal(insights, DEFAULT_CONFIG);
     expect(md).not.toContain('**Ref**');
   });

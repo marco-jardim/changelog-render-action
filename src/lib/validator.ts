@@ -24,8 +24,9 @@ export function validateInsights(data: unknown): ValidationError[] {
   const requiredStrings: (keyof InsightsV1)[] = [
     'schema_version',
     'repo',
-    'date_from',
-    'date_to',
+    'from_sha',
+    'to_sha',
+    'generated_at',
     'what_changed',
     'business_impact',
     'engineering_evolution',

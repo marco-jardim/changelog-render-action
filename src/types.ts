@@ -9,7 +9,6 @@ export interface InsightsCommit {
   message: string;
   author: string;
   date: string;
-  files?: string[];
 }
 
 export interface InsightsFile {
@@ -21,11 +20,15 @@ export interface InsightsFile {
 
 export interface InsightsV1 {
   schema_version: string;
+  idempotency_key?: string;
   repo: string;
-  date_from: string;
-  date_to: string;
-  base_sha?: string;
-  head_sha?: string;
+  from_sha: string;
+  to_sha: string;
+  generated_at: string;
+  provider?: string;
+  model?: string;
+  prompt_profile?: string;
+  language?: string;
   highlights: string[];
   what_changed: string;
   business_impact: string;
@@ -33,6 +36,7 @@ export interface InsightsV1 {
   operational_risks: string[];
   mitigations: string[];
   notable_files: InsightsFile[];
+  fallback_used?: boolean;
   commits?: InsightsCommit[];
   total_commits?: number;
   total_files_changed?: number;

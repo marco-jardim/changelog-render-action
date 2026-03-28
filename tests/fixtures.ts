@@ -3,10 +3,9 @@ import { InsightsV1, RenderConfig } from '../src/types.js';
 export const FULL_INSIGHTS: InsightsV1 = {
   schema_version: '1.0',
   repo: 'owner/repo',
-  date_from: '2026-03-20T00:00:00Z',
-  date_to: '2026-03-27T00:00:00Z',
-  base_sha: 'abc1234abc1234abc1234abc1234abc1234abc1234',
-  head_sha: 'def5678def5678def5678def5678def5678def5678',
+  from_sha: 'abc1234abc1234abc1234abc1234abc1234abc1234',
+  to_sha: 'def5678def5678def5678def5678def5678def5678',
+  generated_at: '2026-03-27T12:00:00Z',
   highlights: ['Added OAuth2 login', 'Improved query performance by 40%'],
   what_changed:
     'This week the team shipped OAuth2 authentication and refactored the database query layer to use connection pooling.',
@@ -25,7 +24,7 @@ export const FULL_INSIGHTS: InsightsV1 = {
       sha: 'abc1234abc1234abc1234abc1234abc1234abc1234',
       message: 'feat: add OAuth2 login',
       author: 'alice',
-      date: '2026-03-25T10:00:00Z',
+      date: '2026-03-20T10:00:00Z',
     },
     {
       sha: 'def5678def5678def5678def5678def5678def5678',
@@ -41,8 +40,9 @@ export const FULL_INSIGHTS: InsightsV1 = {
 export const MINIMAL_INSIGHTS: InsightsV1 = {
   schema_version: '1.0',
   repo: 'owner/minimal',
-  date_from: '2026-03-01T00:00:00Z',
-  date_to: '2026-03-07T00:00:00Z',
+  from_sha: 'aaa1111aaa1111aaa1111aaa1111aaa1111aaa1111',
+  to_sha: 'bbb2222bbb2222bbb2222bbb2222bbb2222bbb2222',
+  generated_at: '2026-03-07T12:00:00Z',
   highlights: ['Bug fix release'],
   what_changed: 'Fixed a critical null pointer in the payment flow.',
   business_impact: 'Prevents checkout failures for users with empty cart.',

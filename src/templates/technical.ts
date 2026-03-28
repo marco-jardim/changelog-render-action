@@ -14,18 +14,25 @@ export function renderTechnical(insights: InsightsV1, config: RenderConfig): str
   lines.push(`# Technical Changelog: ${insights.repo}`);
   lines.push('');
 
-  const dateFrom = formatDate(insights.date_from, config.dateFormat);
-  const dateTo = formatDate(insights.date_to, config.dateFormat);
+  let dateFrom = '';
+  let dateTo = '';
+  if (insights.commits && insights.commits.length > 0) {
+    const sorted = [...insights.commits].sort((a, b) => a.date.localeCompare(b.date));
+    dateFrom = formatDate(sorted[0].date, config.dateFormat);
+    dateTo = formatDate(sorted[sorted.length - 1].date, config.dateFormat);
+  } else if (insights.generated_at) {
+    dateTo = formatDate(insights.generated_at, config.dateFormat);
+  }
   lines.push(`**Period**: \`${dateFrom}\` → \`${dateTo}\`  `);
 
-  if (insights.base_sha && insights.head_sha) {
-    const compareUrl = buildCompareUrl(config.repoUrl, insights.base_sha, insights.head_sha);
+  if (insights.from_sha && insights.to_sha) {
+    const compareUrl = buildCompareUrl(config.repoUrl, insights.from_sha, insights.to_sha);
     if (compareUrl) {
-      const label = `${shortSha(insights.base_sha)}...${shortSha(insights.head_sha)}`;
+      const label = `${shortSha(insights.from_sha)}...${shortSha(insights.to_sha)}`;
       lines.push(`**Diff**: [${label}](${compareUrl})  `);
     } else {
       lines.push(
-        `**Diff**: \`${shortSha(insights.base_sha)}...${shortSha(insights.head_sha)}\`  `
+        `**Diff**: \`${shortSha(insights.from_sha)}...${shortSha(insights.to_sha)}\`  `
       );
     }
   }
@@ -74,7 +81,7 @@ export function renderTechnical(insights: InsightsV1, config: RenderConfig): str
     lines.push('|------|--------|-----|');
     for (const f of insights.notable_files) {
       const filePath = config.repoUrl
-        ? `[${f.path}](${config.repoUrl.replace(/\/$/, '')}/blob/${insights.head_sha ?? 'main'}/${f.path})`
+        ? `[${f.path}](${config.repoUrl.replace(/\/$/, '')}/blob/${insights.to_sha || 'main'}/${f.path})`
         : `\`${f.path}\``;
       const diff =
         f.additions !== undefined && f.deletions !== undefined
