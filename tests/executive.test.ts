@@ -130,17 +130,15 @@ describe('renderExecutive – groupByDate mode', () => {
     expect(md).toContain('## abc1234 — feat: add OAuth2 login');
   });
 
-  it('renders highlights as bullets under the first (newest) date group, without a Highlights heading', () => {
+  it('renders highlights as bullets above all date groups (executive overview), without a Highlights heading', () => {
     const md = renderExecutive(FULL_INSIGHTS, groupConfig);
     expect(md).toContain('- Added OAuth2 login');
     expect(md).toContain('- Improved query performance by 40%');
     expect(md).not.toContain('## Highlights');
-    // Highlights must sit between the newest H1 and the older H1
+    // Highlights must appear before the first (newest) H1 date heading
     const idxNewestH1 = md.indexOf('# March 27, 2026');
     const idxHighlight = md.indexOf('- Added OAuth2 login');
-    const idxOlderH1 = md.indexOf('# March 20, 2026');
-    expect(idxHighlight).toBeGreaterThan(idxNewestH1);
-    expect(idxHighlight).toBeLessThan(idxOlderH1);
+    expect(idxHighlight).toBeLessThan(idxNewestH1);
   });
 
   it('renders combined narrative sections (What Changed, Business Impact, Engineering Evolution) after all date groups', () => {

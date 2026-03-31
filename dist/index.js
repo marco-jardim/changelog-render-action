@@ -19257,20 +19257,19 @@ function renderExecutive(insights, config) {
   }
   lines.push("");
   if (config.groupByDate && hasCommits) {
+    if (insights.highlights.length > 0) {
+      for (const h of insights.highlights) {
+        lines.push(`- ${h}`);
+      }
+      lines.push("");
+    }
     const groups = groupCommitsByDate(insights.commits);
-    for (let gi = 0; gi < groups.length; gi++) {
-      const [key, groupCommits] = groups[gi];
+    for (const [key, groupCommits] of groups) {
       const displayDate = formatDateLong(key);
       lines.push(`# ${displayDate}`);
       lines.push("");
       lines.push(`**${groupCommits.length} commit${groupCommits.length === 1 ? "" : "s"}**`);
       lines.push("");
-      if (gi === 0 && insights.highlights.length > 0) {
-        for (const h of insights.highlights) {
-          lines.push(`- ${h}`);
-        }
-        lines.push("");
-      }
       for (const c of groupCommits) {
         const sha = shortSha(c.sha);
         const firstLine = c.message.replace(/\n.*/s, "").trim();

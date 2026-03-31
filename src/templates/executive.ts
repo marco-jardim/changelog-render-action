@@ -78,26 +78,24 @@ export function renderExecutive(insights: InsightsV1, config: RenderConfig): str
   lines.push('');
 
   if (config.groupByDate && hasCommits) {
-    // ── Date-grouped view ────────────────────────────────────────────────────
+    // ── Executive summary (LLM highlights) at the top ────────────────────────
+    if (insights.highlights.length > 0) {
+      for (const h of insights.highlights) {
+        lines.push(`- ${h}`);
+      }
+      lines.push('');
+    }
+
+    // ── Date-grouped commit drill-down ───────────────────────────────────────
     const groups = groupCommitsByDate(insights.commits!);
 
-    for (let gi = 0; gi < groups.length; gi++) {
-      const [key, groupCommits] = groups[gi];
+    for (const [key, groupCommits] of groups) {
       const displayDate = formatDateLong(key);
 
       lines.push(`# ${displayDate}`);
       lines.push('');
       lines.push(`**${groupCommits.length} commit${groupCommits.length === 1 ? '' : 's'}**`);
       lines.push('');
-
-      // Show combined highlights as a brief summary under the first (newest) date group only.
-      // The LLM produces one set of highlights for the whole period, not per-day.
-      if (gi === 0 && insights.highlights.length > 0) {
-        for (const h of insights.highlights) {
-          lines.push(`- ${h}`);
-        }
-        lines.push('');
-      }
 
       for (const c of groupCommits) {
         const sha = shortSha(c.sha);
