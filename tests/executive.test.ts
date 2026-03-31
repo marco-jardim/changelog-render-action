@@ -203,4 +203,31 @@ describe('renderExecutive – groupByDate mode', () => {
     expect(md).toContain('## What Changed');
     expect(md).not.toContain('## Operational Risks');
   });
+
+  it('renders a per-day heuristic summary line from commit messages', () => {
+    const md = renderExecutive(FULL_INSIGHTS, groupConfig);
+    // March 20 has "feat: add OAuth2 login" → "New: add OAuth2 login"
+    expect(md).toContain('New: add OAuth2 login');
+    // March 27 has "perf: database connection pooling" → "1 maintenance"
+    expect(md).toContain('1 maintenance');
+  });
+
+  it('generates multi-category summary for days with mixed commit types', () => {
+    const mixedInsights: InsightsV1 = {
+      ...FULL_INSIGHTS,
+      commits: [
+        { sha: 'aaa1111111', message: 'feat: add login page', author: 'alice', date: '2026-03-25T10:00:00Z' },
+        { sha: 'bbb2222222', message: 'feat: add signup flow', author: 'alice', date: '2026-03-25T11:00:00Z' },
+        { sha: 'ccc3333333', message: 'fix: null check on user', author: 'bob', date: '2026-03-25T12:00:00Z' },
+        { sha: 'ddd4444444', message: 'test: add auth tests', author: 'alice', date: '2026-03-25T13:00:00Z' },
+      ],
+      total_commits: 4,
+    };
+    const md = renderExecutive(mixedInsights, groupConfig);
+    expect(md).toContain('# March 25, 2026');
+    // 2 feats + 1 fix + 1 test
+    expect(md).toContain('2 features:');
+    expect(md).toContain('Fix:');
+    expect(md).toContain('1 test update');
+  });
 });

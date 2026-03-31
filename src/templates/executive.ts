@@ -32,6 +32,59 @@ function groupCommitsByDate(commits: InsightsCommit[]): [string, InsightsCommit[
 }
 
 /**
+ * Extracts a per-day summary sentence from commit messages using conventional
+ * commit prefixes. Pure heuristic — no LLM call needed.
+ */
+function summarizeDay(commits: InsightsCommit[]): string {
+  const feats: string[] = [];
+  const fixes: string[] = [];
+  const tests: string[] = [];
+  const docs: string[] = [];
+  const chores: string[] = [];
+  const other: string[] = [];
+
+  for (const c of commits) {
+    const msg = c.message.replace(/\n.*/s, '').trim();
+    // Strip conventional-commit prefix to get the meaningful part
+    const body = msg.replace(/^(feat|fix|test|docs|chore|ci|build|refactor|perf|style)(\([^)]*\))?[!:]?\s*/i, '').trim();
+    const short = body.length > 80 ? body.slice(0, 77) + '…' : body;
+
+    if (/^feat/i.test(msg)) feats.push(short);
+    else if (/^fix/i.test(msg)) fixes.push(short);
+    else if (/^test/i.test(msg)) tests.push(short);
+    else if (/^docs/i.test(msg)) docs.push(short);
+    else if (/^(chore|ci|build|refactor|style|perf)/i.test(msg)) chores.push(short);
+    else other.push(short);
+  }
+
+  const parts: string[] = [];
+  if (feats.length > 0) {
+    parts.push(feats.length === 1
+      ? `New: ${feats[0]}`
+      : `${feats.length} features: ${feats.slice(0, 2).join('; ')}${feats.length > 2 ? ` (+${feats.length - 2} more)` : ''}`
+    );
+  }
+  if (fixes.length > 0) {
+    parts.push(fixes.length === 1
+      ? `Fix: ${fixes[0]}`
+      : `${fixes.length} fixes`
+    );
+  }
+  if (tests.length > 0) parts.push(`${tests.length} test update${tests.length > 1 ? 's' : ''}`);
+  if (docs.length > 0) parts.push(`${docs.length} doc${docs.length > 1 ? 's' : ''} update`);
+  if (chores.length > 0) parts.push(`${chores.length} maintenance`);
+  if (other.length > 0 && parts.length === 0) {
+    // Only show "other" if nothing else was categorized
+    parts.push(other.length === 1
+      ? other[0]
+      : `${other.length} changes`
+    );
+  }
+
+  return parts.join(' · ');
+}
+
+/**
  * Renders the executive template — full rich markdown with all sections.
  * Audience: product managers, stakeholders, non-technical readers.
  *
@@ -96,6 +149,13 @@ export function renderExecutive(insights: InsightsV1, config: RenderConfig): str
       lines.push('');
       lines.push(`**${groupCommits.length} commit${groupCommits.length === 1 ? '' : 's'}**`);
       lines.push('');
+
+      // Heuristic per-day summary from commit messages
+      const daySummary = summarizeDay(groupCommits);
+      if (daySummary) {
+        lines.push(daySummary);
+        lines.push('');
+      }
 
       for (const c of groupCommits) {
         const sha = shortSha(c.sha);
