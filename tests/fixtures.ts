@@ -58,6 +58,7 @@ export const DEFAULT_CONFIG: RenderConfig = {
   outputPath: 'executive-changelog.md',
   includeCommitList: true,
   includeFileEvidence: true,
+  groupByDate: false,
   dateFormat: 'YYYY-MM-DD',
   repoUrl: 'https://github.com/owner/repo',
 };

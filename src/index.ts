@@ -35,6 +35,7 @@ async function run(): Promise<void> {
     const outputPath = core.getInput('output_path') || 'executive-changelog.md';
     const includeCommitList = parseBooleanInput(core.getInput('include_commit_list'), true);
     const includeFileEvidence = parseBooleanInput(core.getInput('include_file_evidence'), true);
+    const groupByDate = parseBooleanInput(core.getInput('group_by_date'), true);
     const dateFormat = parseDateFormat(core.getInput('date_format') || 'YYYY-MM-DD');
     const repoUrl = core.getInput('repo_url') || '';
 
@@ -44,6 +45,7 @@ async function run(): Promise<void> {
       outputPath,
       includeCommitList,
       includeFileEvidence,
+      groupByDate,
       dateFormat,
       repoUrl,
     };

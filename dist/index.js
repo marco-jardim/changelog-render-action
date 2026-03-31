@@ -19197,11 +19197,40 @@ function shortSha(sha) {
 }
 
 // src/templates/executive.ts
+function formatDateLong(isoDatePrefix) {
+  const d = /* @__PURE__ */ new Date(isoDatePrefix + "T00:00:00Z");
+  if (isNaN(d.getTime())) return isoDatePrefix;
+  const months = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December"
+  ];
+  return `${months[d.getUTCMonth()]} ${d.getUTCDate()}, ${d.getUTCFullYear()}`;
+}
+function groupCommitsByDate(commits) {
+  const map = /* @__PURE__ */ new Map();
+  for (const c of commits) {
+    const key = c.date ? c.date.slice(0, 10) : "";
+    if (!map.has(key)) map.set(key, []);
+    map.get(key).push(c);
+  }
+  return [...map.entries()].sort((a, b) => b[0].localeCompare(a[0]));
+}
 function renderExecutive(insights, config) {
   const lines = [];
+  const hasCommits = !!(insights.commits && insights.commits.length > 0);
   let dateFrom = "";
   let dateTo = "";
-  if (insights.commits && insights.commits.length > 0) {
+  if (hasCommits) {
     const sorted = [...insights.commits].sort((a, b) => a.date.localeCompare(b.date));
     dateFrom = formatDate(sorted[0].date, config.dateFormat);
     dateTo = formatDate(sorted[sorted.length - 1].date, config.dateFormat);
@@ -19227,50 +19256,116 @@ function renderExecutive(insights, config) {
     lines.push(`**Files Changed**: ${insights.total_files_changed}  `);
   }
   lines.push("");
-  if (insights.highlights.length > 0) {
-    lines.push("## Highlights");
-    lines.push("");
-    for (const h of insights.highlights) {
-      lines.push(`- ${h}`);
+  if (config.groupByDate && hasCommits) {
+    const groups = groupCommitsByDate(insights.commits);
+    for (let gi = 0; gi < groups.length; gi++) {
+      const [key, groupCommits] = groups[gi];
+      const displayDate = formatDateLong(key);
+      lines.push(`# ${displayDate}`);
+      lines.push("");
+      lines.push(`**${groupCommits.length} commit${groupCommits.length === 1 ? "" : "s"}**`);
+      lines.push("");
+      if (gi === 0 && insights.highlights.length > 0) {
+        for (const h of insights.highlights) {
+          lines.push(`- ${h}`);
+        }
+        lines.push("");
+      }
+      for (const c of groupCommits) {
+        const sha = shortSha(c.sha);
+        const firstLine = c.message.replace(/\n.*/s, "").trim();
+        lines.push(`## ${sha} \u2014 ${firstLine}`);
+        lines.push("");
+        lines.push(`*${c.author}*`);
+        lines.push("");
+        lines.push("---");
+        lines.push("");
+      }
     }
-    lines.push("");
-  }
-  if (insights.what_changed) {
-    lines.push("## What Changed");
-    lines.push("");
-    lines.push(insights.what_changed);
-    lines.push("");
-  }
-  if (insights.business_impact) {
-    lines.push("## Business Impact");
-    lines.push("");
-    lines.push(insights.business_impact);
-    lines.push("");
-  }
-  if (insights.engineering_evolution) {
-    lines.push("## Engineering Evolution");
-    lines.push("");
-    lines.push(insights.engineering_evolution);
-    lines.push("");
-  }
-  const hasRisks = insights.operational_risks.length > 0;
-  const hasMitigations = insights.mitigations.length > 0;
-  if (hasRisks || hasMitigations) {
-    lines.push("## Operational Risks");
-    lines.push("");
-    if (hasRisks) {
-      for (const risk of insights.operational_risks) {
-        lines.push(`- ${risk}`);
+    if (insights.what_changed) {
+      lines.push("## What Changed");
+      lines.push("");
+      lines.push(insights.what_changed);
+      lines.push("");
+    }
+    if (insights.business_impact) {
+      lines.push("## Business Impact");
+      lines.push("");
+      lines.push(insights.business_impact);
+      lines.push("");
+    }
+    if (insights.engineering_evolution) {
+      lines.push("## Engineering Evolution");
+      lines.push("");
+      lines.push(insights.engineering_evolution);
+      lines.push("");
+    }
+    const hasRisksGrouped = insights.operational_risks.length > 0;
+    const hasMitigationsGrouped = insights.mitigations.length > 0;
+    if (hasRisksGrouped || hasMitigationsGrouped) {
+      lines.push("## Operational Risks & Mitigations");
+      lines.push("");
+      if (hasRisksGrouped) {
+        for (const risk of insights.operational_risks) {
+          lines.push(`- ${risk}`);
+        }
+        lines.push("");
+      }
+      if (hasMitigationsGrouped) {
+        lines.push("**Mitigations**");
+        lines.push("");
+        for (const m of insights.mitigations) {
+          lines.push(`- ${m}`);
+        }
+        lines.push("");
+      }
+    }
+  } else {
+    if (insights.highlights.length > 0) {
+      lines.push("## Highlights");
+      lines.push("");
+      for (const h of insights.highlights) {
+        lines.push(`- ${h}`);
       }
       lines.push("");
     }
-    if (hasMitigations) {
-      lines.push("**Mitigations**");
+    if (insights.what_changed) {
+      lines.push("## What Changed");
       lines.push("");
-      for (const mitigation of insights.mitigations) {
-        lines.push(`- ${mitigation}`);
+      lines.push(insights.what_changed);
+      lines.push("");
+    }
+    if (insights.business_impact) {
+      lines.push("## Business Impact");
+      lines.push("");
+      lines.push(insights.business_impact);
+      lines.push("");
+    }
+    if (insights.engineering_evolution) {
+      lines.push("## Engineering Evolution");
+      lines.push("");
+      lines.push(insights.engineering_evolution);
+      lines.push("");
+    }
+    const hasRisks = insights.operational_risks.length > 0;
+    const hasMitigations = insights.mitigations.length > 0;
+    if (hasRisks || hasMitigations) {
+      lines.push("## Operational Risks");
+      lines.push("");
+      if (hasRisks) {
+        for (const risk of insights.operational_risks) {
+          lines.push(`- ${risk}`);
+        }
+        lines.push("");
       }
-      lines.push("");
+      if (hasMitigations) {
+        lines.push("**Mitigations**");
+        lines.push("");
+        for (const m of insights.mitigations) {
+          lines.push(`- ${m}`);
+        }
+        lines.push("");
+      }
     }
   }
   if (config.includeFileEvidence && insights.notable_files.length > 0) {
@@ -19281,8 +19376,8 @@ function renderExecutive(insights, config) {
     }
     lines.push("");
   }
-  if (config.includeCommitList && insights.commits && insights.commits.length > 0) {
-    lines.push("## Commits");
+  if (config.includeCommitList && hasCommits) {
+    lines.push(config.groupByDate ? "## Full Commit Log" : "## Commits");
     lines.push("");
     for (const c of insights.commits) {
       const sha = shortSha(c.sha);
@@ -19483,6 +19578,7 @@ async function run() {
     const outputPath = getInput("output_path") || "executive-changelog.md";
     const includeCommitList = parseBooleanInput(getInput("include_commit_list"), true);
     const includeFileEvidence = parseBooleanInput(getInput("include_file_evidence"), true);
+    const groupByDate = parseBooleanInput(getInput("group_by_date"), true);
     const dateFormat = parseDateFormat(getInput("date_format") || "YYYY-MM-DD");
     const repoUrl = getInput("repo_url") || "";
     const config = {
@@ -19491,6 +19587,7 @@ async function run() {
       outputPath,
       includeCommitList,
       includeFileEvidence,
+      groupByDate,
       dateFormat,
       repoUrl
     };

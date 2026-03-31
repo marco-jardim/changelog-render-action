@@ -52,6 +52,7 @@ export interface RenderConfig {
   outputPath: string;
   includeCommitList: boolean;
   includeFileEvidence: boolean;
+  groupByDate: boolean;
   dateFormat: DateFormatType;
   repoUrl: string;
 }

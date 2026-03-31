@@ -26,6 +26,10 @@ inputs:
     description: 'Whether to include notable files table with file evidence'
     required: false
     default: 'true'
+  group_by_date:
+    description: 'Group commits by date with daily summary. Each date becomes H1, each commit H2.'
+    required: false
+    default: 'true'
   date_format:
     description: 'Date format string (YYYY-MM-DD, DD/MM/YYYY, MM/DD/YYYY)'
     required: false
