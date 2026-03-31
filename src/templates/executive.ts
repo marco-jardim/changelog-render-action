@@ -32,59 +32,6 @@ function groupCommitsByDate(commits: InsightsCommit[]): [string, InsightsCommit[
 }
 
 /**
- * Extracts a per-day summary sentence from commit messages using conventional
- * commit prefixes. Pure heuristic — no LLM call needed.
- */
-function summarizeDay(commits: InsightsCommit[]): string {
-  const feats: string[] = [];
-  const fixes: string[] = [];
-  const tests: string[] = [];
-  const docs: string[] = [];
-  const chores: string[] = [];
-  const other: string[] = [];
-
-  for (const c of commits) {
-    const msg = c.message.replace(/\n.*/s, '').trim();
-    // Strip conventional-commit prefix to get the meaningful part
-    const body = msg.replace(/^(feat|fix|test|docs|chore|ci|build|refactor|perf|style)(\([^)]*\))?[!:]?\s*/i, '').trim();
-    const short = body.length > 80 ? body.slice(0, 77) + '…' : body;
-
-    if (/^feat/i.test(msg)) feats.push(short);
-    else if (/^fix/i.test(msg)) fixes.push(short);
-    else if (/^test/i.test(msg)) tests.push(short);
-    else if (/^docs/i.test(msg)) docs.push(short);
-    else if (/^(chore|ci|build|refactor|style|perf)/i.test(msg)) chores.push(short);
-    else other.push(short);
-  }
-
-  const parts: string[] = [];
-  if (feats.length > 0) {
-    parts.push(feats.length === 1
-      ? `New: ${feats[0]}`
-      : `${feats.length} features: ${feats.slice(0, 2).join('; ')}${feats.length > 2 ? ` (+${feats.length - 2} more)` : ''}`
-    );
-  }
-  if (fixes.length > 0) {
-    parts.push(fixes.length === 1
-      ? `Fix: ${fixes[0]}`
-      : `${fixes.length} fixes`
-    );
-  }
-  if (tests.length > 0) parts.push(`${tests.length} test update${tests.length > 1 ? 's' : ''}`);
-  if (docs.length > 0) parts.push(`${docs.length} doc${docs.length > 1 ? 's' : ''} update`);
-  if (chores.length > 0) parts.push(`${chores.length} maintenance`);
-  if (other.length > 0 && parts.length === 0) {
-    // Only show "other" if nothing else was categorized
-    parts.push(other.length === 1
-      ? other[0]
-      : `${other.length} changes`
-    );
-  }
-
-  return parts.join(' · ');
-}
-
-/**
  * Renders the executive template — full rich markdown with all sections.
  * Audience: product managers, stakeholders, non-technical readers.
  *
@@ -139,37 +86,74 @@ export function renderExecutive(insights: InsightsV1, config: RenderConfig): str
       lines.push('');
     }
 
-    // ── Date-grouped commit drill-down ───────────────────────────────────────
-    const groups = groupCommitsByDate(insights.commits!);
+    // ── Per-day sections from daily_insights (LLM-generated) ─────────────────
+    if (insights.daily_insights && insights.daily_insights.length > 0) {
+      for (const day of insights.daily_insights) {
+        const displayDate = formatDateLong(day.date);
 
-    for (const [key, groupCommits] of groups) {
-      const displayDate = formatDateLong(key);
-
-      lines.push(`# ${displayDate}`);
-      lines.push('');
-      lines.push(`**${groupCommits.length} commit${groupCommits.length === 1 ? '' : 's'}**`);
-      lines.push('');
-
-      // Heuristic per-day summary from commit messages
-      const daySummary = summarizeDay(groupCommits);
-      if (daySummary) {
-        lines.push(daySummary);
+        lines.push(`# ${displayDate}`);
         lines.push('');
+
+        // LLM-generated summary for this day
+        if (day.summary) {
+          lines.push(day.summary);
+          lines.push('');
+        }
+
+        // Per-day highlights (if different from summary, keep them as bullets)
+        if (day.highlights && day.highlights.length > 0) {
+          for (const h of day.highlights) {
+            lines.push(`- ${h}`);
+          }
+          lines.push('');
+        }
+
+        // Per-day operational risks
+        if (day.operational_risks && day.operational_risks.length > 0) {
+          lines.push('**Risks:**');
+          for (const r of day.operational_risks) {
+            lines.push(`- ${r}`);
+          }
+          lines.push('');
+        }
+
+        // Commit listing for this day
+        if (day.commits && day.commits.length > 0) {
+          for (const c of day.commits) {
+            const sha = shortSha(c.sha);
+            const firstLine = c.message.replace(/\n.*/s, '').trim();
+            lines.push(`## ${sha} — ${firstLine}`);
+            lines.push('');
+            lines.push(`*${c.author}*`);
+            lines.push('');
+            lines.push('---');
+            lines.push('');
+          }
+        }
       }
-
-      for (const c of groupCommits) {
-        const sha = shortSha(c.sha);
-        const firstLine = c.message.replace(/\n.*/s, '').trim();
-        lines.push(`## ${sha} — ${firstLine}`);
+    } else {
+      // Fallback: no daily_insights available, use old groupCommitsByDate approach
+      const groups = groupCommitsByDate(insights.commits!);
+      for (const [key, groupCommits] of groups) {
+        const displayDate = formatDateLong(key);
+        lines.push(`# ${displayDate}`);
         lines.push('');
-        lines.push(`*${c.author}*`);
+        lines.push(`**${groupCommits.length} commit${groupCommits.length === 1 ? '' : 's'}**`);
         lines.push('');
-        lines.push('---');
-        lines.push('');
+        for (const c of groupCommits) {
+          const sha = shortSha(c.sha);
+          const firstLine = c.message.replace(/\n.*/s, '').trim();
+          lines.push(`## ${sha} — ${firstLine}`);
+          lines.push('');
+          lines.push(`*${c.author}*`);
+          lines.push('');
+          lines.push('---');
+          lines.push('');
+        }
       }
     }
 
-    // ── Combined narrative sections ──────────────────────────────────────────
+    // ── Combined narrative sections (overall, from main LLM call) ────────────
     if (insights.what_changed) {
       lines.push('## What Changed');
       lines.push('');
@@ -191,7 +175,6 @@ export function renderExecutive(insights: InsightsV1, config: RenderConfig): str
       lines.push('');
     }
 
-    // Single combined section for Operational Risks + Mitigations to save space
     const hasRisksGrouped = insights.operational_risks.length > 0;
     const hasMitigationsGrouped = insights.mitigations.length > 0;
     if (hasRisksGrouped || hasMitigationsGrouped) {

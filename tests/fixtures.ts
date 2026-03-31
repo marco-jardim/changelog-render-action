@@ -52,6 +52,42 @@ export const MINIMAL_INSIGHTS: InsightsV1 = {
   notable_files: [],
 };
 
+export const INSIGHTS_WITH_DAILY: InsightsV1 = {
+  ...FULL_INSIGHTS,
+  daily_insights: [
+    {
+      date: '2026-03-27',
+      commit_count: 1,
+      highlights: ['Database connection pooling implemented'],
+      summary: 'Bob implemented database connection pooling to improve query performance by 40%.',
+      operational_risks: [],
+      commits: [
+        {
+          sha: 'def5678def5678def5678def5678def5678def5678',
+          message: 'perf: database connection pooling',
+          author: 'bob',
+          date: '2026-03-27T08:00:00Z',
+        },
+      ],
+    },
+    {
+      date: '2026-03-20',
+      commit_count: 1,
+      highlights: ['OAuth2 login support added'],
+      summary: 'Alice added OAuth2 authentication support enabling Google and GitHub login.',
+      operational_risks: ['OAuth tokens in memory may expire on long-running processes'],
+      commits: [
+        {
+          sha: 'abc1234abc1234abc1234abc1234abc1234abc1234',
+          message: 'feat: add OAuth2 login',
+          author: 'alice',
+          date: '2026-03-20T10:00:00Z',
+        },
+      ],
+    },
+  ],
+};
+
 export const DEFAULT_CONFIG: RenderConfig = {
   insightsPath: 'insights.v1.json',
   template: 'executive',

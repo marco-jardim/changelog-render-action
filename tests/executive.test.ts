@@ -1,5 +1,5 @@
 import { renderExecutive } from '../src/templates/executive';
-import { FULL_INSIGHTS, MINIMAL_INSIGHTS, DEFAULT_CONFIG } from './fixtures';
+import { FULL_INSIGHTS, MINIMAL_INSIGHTS, DEFAULT_CONFIG, INSIGHTS_WITH_DAILY } from './fixtures';
 import { InsightsV1, RenderConfig } from '../src/types';
 
 describe('executive template', () => {
@@ -204,30 +204,97 @@ describe('renderExecutive – groupByDate mode', () => {
     expect(md).not.toContain('## Operational Risks');
   });
 
-  it('renders a per-day heuristic summary line from commit messages', () => {
+  it('fallback path renders H1 date headings and H2 commit headings without heuristic summaries', () => {
+    // FULL_INSIGHTS has no daily_insights → fallback groupCommitsByDate path
     const md = renderExecutive(FULL_INSIGHTS, groupConfig);
-    // March 20 has "feat: add OAuth2 login" → "New: add OAuth2 login"
-    expect(md).toContain('New: add OAuth2 login');
-    // March 27 has "perf: database connection pooling" → "1 maintenance"
-    expect(md).toContain('1 maintenance');
+    expect(md).toContain('# March 27, 2026');
+    expect(md).toContain('# March 20, 2026');
+    expect(md).toContain('## def5678 — perf: database connection pooling');
+    expect(md).toContain('## abc1234 — feat: add OAuth2 login');
+    // Heuristic summaries must NOT appear in fallback path
+    expect(md).not.toContain('New: add OAuth2 login');
+    expect(md).not.toContain('1 maintenance');
   });
 
-  it('generates multi-category summary for days with mixed commit types', () => {
-    const mixedInsights: InsightsV1 = {
-      ...FULL_INSIGHTS,
-      commits: [
-        { sha: 'aaa1111111', message: 'feat: add login page', author: 'alice', date: '2026-03-25T10:00:00Z' },
-        { sha: 'bbb2222222', message: 'feat: add signup flow', author: 'alice', date: '2026-03-25T11:00:00Z' },
-        { sha: 'ccc3333333', message: 'fix: null check on user', author: 'bob', date: '2026-03-25T12:00:00Z' },
-        { sha: 'ddd4444444', message: 'test: add auth tests', author: 'alice', date: '2026-03-25T13:00:00Z' },
-      ],
-      total_commits: 4,
-    };
-    const md = renderExecutive(mixedInsights, groupConfig);
-    expect(md).toContain('# March 25, 2026');
-    // 2 feats + 1 fix + 1 test
-    expect(md).toContain('2 features:');
-    expect(md).toContain('Fix:');
-    expect(md).toContain('1 test update');
+  it('fallback path renders commit count badge per day', () => {
+    const md = renderExecutive(FULL_INSIGHTS, groupConfig);
+    // Each date has exactly 1 commit in FULL_INSIGHTS
+    const matches = md.match(/\*\*1 commit\*\*/g);
+    expect(matches).toHaveLength(2);
+  });
+});
+
+describe('renderExecutive – daily_insights integration', () => {
+  const groupConfig: RenderConfig = { ...DEFAULT_CONFIG, groupByDate: true };
+
+  it('renders LLM summary text under H1 date headers when daily_insights present', () => {
+    const md = renderExecutive(INSIGHTS_WITH_DAILY, groupConfig);
+    expect(md).toContain('# March 27, 2026');
+    expect(md).toContain('Bob implemented database connection pooling to improve query performance by 40%.');
+    expect(md).toContain('# March 20, 2026');
+    expect(md).toContain('Alice added OAuth2 authentication support enabling Google and GitHub login.');
+  });
+
+  it('renders per-day highlights as bullet points under each date section', () => {
+    const md = renderExecutive(INSIGHTS_WITH_DAILY, groupConfig);
+    expect(md).toContain('- Database connection pooling implemented');
+    expect(md).toContain('- OAuth2 login support added');
+  });
+
+  it('renders per-day operational risks under Risks: header', () => {
+    const md = renderExecutive(INSIGHTS_WITH_DAILY, groupConfig);
+    expect(md).toContain('**Risks:**');
+    expect(md).toContain('- OAuth tokens in memory may expire on long-running processes');
+  });
+
+  it('omits Risks: header for days with no operational risks', () => {
+    const md = renderExecutive(INSIGHTS_WITH_DAILY, groupConfig);
+    // Only one Risks: section should appear (March 20 has risks; March 27 has none)
+    const riskMatches = md.match(/\*\*Risks:\*\*/g);
+    expect(riskMatches).toHaveLength(1);
+  });
+
+  it('renders commits from daily_insights as H2 headings with author', () => {
+    const md = renderExecutive(INSIGHTS_WITH_DAILY, groupConfig);
+    expect(md).toContain('## def5678 — perf: database connection pooling');
+    expect(md).toContain('*bob*');
+    expect(md).toContain('## abc1234 — feat: add OAuth2 login');
+    expect(md).toContain('*alice*');
+  });
+
+  it('does not produce heuristic summarizeDay output when daily_insights present', () => {
+    const md = renderExecutive(INSIGHTS_WITH_DAILY, groupConfig);
+    expect(md).not.toContain('New: add OAuth2 login');
+    expect(md).not.toContain('1 maintenance');
+    // No commit-count badge in LLM path
+    expect(md).not.toMatch(/\*\*\d+ commits?\*\*/);
+  });
+
+  it('renders overall narrative sections after all daily_insights sections', () => {
+    const md = renderExecutive(INSIGHTS_WITH_DAILY, groupConfig);
+    const lastDayIdx = Math.max(md.indexOf('# March 27, 2026'), md.indexOf('# March 20, 2026'));
+    expect(md.indexOf('## What Changed')).toBeGreaterThan(lastDayIdx);
+    expect(md.indexOf('## Business Impact')).toBeGreaterThan(lastDayIdx);
+    expect(md.indexOf('## Engineering Evolution')).toBeGreaterThan(lastDayIdx);
+  });
+
+  it('falls back to commit-only grouping when daily_insights is empty array', () => {
+    const noDaily: InsightsV1 = { ...FULL_INSIGHTS, daily_insights: [] };
+    const md = renderExecutive(noDaily, groupConfig);
+    expect(md).toContain('# March 27, 2026');
+    expect(md).toContain('# March 20, 2026');
+    // Commit-count badges appear in fallback path
+    expect(md).toContain('**1 commit**');
+    // No LLM summaries
+    expect(md).not.toContain('Bob implemented');
+    expect(md).not.toContain('Alice added OAuth2');
+  });
+
+  it('falls back to commit-only grouping when daily_insights is absent', () => {
+    // FULL_INSIGHTS has no daily_insights field
+    const md = renderExecutive(FULL_INSIGHTS, groupConfig);
+    expect(md).toContain('# March 27, 2026');
+    expect(md).toContain('**1 commit**');
+    expect(md).not.toContain('Bob implemented');
   });
 });

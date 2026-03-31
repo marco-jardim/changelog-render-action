@@ -11,6 +11,15 @@ export interface InsightsCommit {
   date: string;
 }
 
+export interface DailyInsight {
+  date: string;                    // "2026-03-30" (YYYY-MM-DD)
+  commit_count: number;
+  highlights: string[];
+  summary: string;                 // LLM-generated narrative
+  operational_risks: string[];
+  commits: InsightsCommit[];
+}
+
 export interface InsightsFile {
   path: string;
   reason: string;
@@ -40,6 +49,7 @@ export interface InsightsV1 {
   commits?: InsightsCommit[];
   total_commits?: number;
   total_files_changed?: number;
+  daily_insights?: DailyInsight[];
 }
 
 export type TemplateType = 'executive' | 'technical' | 'minimal';
