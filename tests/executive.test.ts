@@ -1,6 +1,6 @@
 import { renderExecutive } from '../src/templates/executive';
 import { FULL_INSIGHTS, MINIMAL_INSIGHTS, DEFAULT_CONFIG } from './fixtures';
-import { RenderConfig } from '../src/types';
+import { InsightsV1, RenderConfig } from '../src/types';
 
 describe('executive template', () => {
   it('renders repo name in the header', () => {
@@ -109,5 +109,100 @@ describe('executive template', () => {
     expect(md).toContain('abc1234...def5678');
     // The backtick code format is used when no URL
     expect(md).toContain('`abc1234...def5678`');
+  });
+});
+
+describe('renderExecutive – groupByDate mode', () => {
+  const groupConfig: RenderConfig = { ...DEFAULT_CONFIG, groupByDate: true };
+
+  it('groups commits under H1 date headings, newest first', () => {
+    const md = renderExecutive(FULL_INSIGHTS, groupConfig);
+    expect(md).toContain('# March 27, 2026');
+    expect(md).toContain('# March 20, 2026');
+    const idxNewer = md.indexOf('# March 27, 2026');
+    const idxOlder = md.indexOf('# March 20, 2026');
+    expect(idxNewer).toBeLessThan(idxOlder);
+  });
+
+  it('each commit produces an H2 heading with short SHA and message', () => {
+    const md = renderExecutive(FULL_INSIGHTS, groupConfig);
+    expect(md).toContain('## def5678 — perf: database connection pooling');
+    expect(md).toContain('## abc1234 — feat: add OAuth2 login');
+  });
+
+  it('renders highlights as bullets under the first (newest) date group, without a Highlights heading', () => {
+    const md = renderExecutive(FULL_INSIGHTS, groupConfig);
+    expect(md).toContain('- Added OAuth2 login');
+    expect(md).toContain('- Improved query performance by 40%');
+    expect(md).not.toContain('## Highlights');
+    // Highlights must sit between the newest H1 and the older H1
+    const idxNewestH1 = md.indexOf('# March 27, 2026');
+    const idxHighlight = md.indexOf('- Added OAuth2 login');
+    const idxOlderH1 = md.indexOf('# March 20, 2026');
+    expect(idxHighlight).toBeGreaterThan(idxNewestH1);
+    expect(idxHighlight).toBeLessThan(idxOlderH1);
+  });
+
+  it('renders combined narrative sections (What Changed, Business Impact, Engineering Evolution) after all date groups', () => {
+    const md = renderExecutive(FULL_INSIGHTS, groupConfig);
+    expect(md).toContain('## What Changed');
+    expect(md).toContain('## Business Impact');
+    expect(md).toContain('## Engineering Evolution');
+    // All narrative sections must appear after the last date group heading
+    const lastGroupIdx = Math.max(md.indexOf('# March 27, 2026'), md.indexOf('# March 20, 2026'));
+    expect(md.indexOf('## What Changed')).toBeGreaterThan(lastGroupIdx);
+    expect(md.indexOf('## Business Impact')).toBeGreaterThan(lastGroupIdx);
+    expect(md.indexOf('## Engineering Evolution')).toBeGreaterThan(lastGroupIdx);
+  });
+
+  it('combines operational risks and mitigations into one "Operational Risks & Mitigations" section', () => {
+    const md = renderExecutive(FULL_INSIGHTS, groupConfig);
+    expect(md).toContain('## Operational Risks & Mitigations');
+    // Must NOT produce the standalone flat-mode heading
+    expect(md).not.toMatch(/^## Operational Risks$/m);
+    expect(md).toContain('OAuth tokens stored in memory');
+    expect(md).toContain('token refresh logic');
+  });
+
+  it('renders "Full Commit Log" header (not "Commits") when groupByDate is true', () => {
+    const md = renderExecutive(FULL_INSIGHTS, groupConfig);
+    expect(md).toContain('## Full Commit Log');
+    expect(md).not.toContain('## Commits');
+  });
+
+  it('single commit renders with singular label and correct date heading', () => {
+    const singleInsights: InsightsV1 = {
+      ...FULL_INSIGHTS,
+      commits: [FULL_INSIGHTS.commits![0]],
+      total_commits: 1,
+    };
+    const md = renderExecutive(singleInsights, groupConfig);
+    expect(md).toContain('# March 20, 2026');
+    expect(md).toContain('**1 commit**');
+    expect(md).toContain('## abc1234 — feat: add OAuth2 login');
+    // Only one H1 date heading should be present
+    expect(md).not.toContain('# March 27, 2026');
+  });
+
+  it('falls back to flat view and still renders narrative sections when commits array is empty', () => {
+    const noCommitsInsights: InsightsV1 = {
+      ...FULL_INSIGHTS,
+      commits: [],
+      total_commits: 0,
+    };
+    const md = renderExecutive(noCommitsInsights, groupConfig);
+    // No H1 date-group headings should appear
+    expect(md).not.toMatch(/^# \w+ \d+, \d{4}/m);
+    // Flat-view narrative sections should still render
+    expect(md).toContain('## Highlights');
+    expect(md).toContain('## What Changed');
+    expect(md).toContain('## Business Impact');
+  });
+
+  it('falls back to flat view for MINIMAL_INSIGHTS (no commits property) with groupByDate true', () => {
+    const md = renderExecutive(MINIMAL_INSIGHTS, groupConfig);
+    expect(md).not.toMatch(/^# \w+ \d+, \d{4}/m);
+    expect(md).toContain('## What Changed');
+    expect(md).not.toContain('## Operational Risks');
   });
 });
