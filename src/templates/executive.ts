@@ -119,16 +119,13 @@ export function renderExecutive(insights: InsightsV1, config: RenderConfig): str
 
         // Commit listing for this day
         if (day.commits && day.commits.length > 0) {
-          for (const c of day.commits) {
+          for (let i = 0; i < day.commits.length; i++) {
+            const c = day.commits[i]!;
             const sha = shortSha(c.sha);
             const firstLine = c.message.replace(/\n.*/s, '').trim();
-            lines.push(`## ${sha} — ${firstLine}`);
-            lines.push('');
-            lines.push(`*${c.author}*`);
-            lines.push('');
-            lines.push('---');
-            lines.push('');
+            lines.push(`${i + 1}. ${sha} — ${firstLine} (*${c.author}*)`);
           }
+          lines.push('');
         }
       }
     } else {
@@ -140,16 +137,13 @@ export function renderExecutive(insights: InsightsV1, config: RenderConfig): str
         lines.push('');
         lines.push(`**${groupCommits.length} commit${groupCommits.length === 1 ? '' : 's'}**`);
         lines.push('');
-        for (const c of groupCommits) {
+        for (let i = 0; i < groupCommits.length; i++) {
+          const c = groupCommits[i]!;
           const sha = shortSha(c.sha);
           const firstLine = c.message.replace(/\n.*/s, '').trim();
-          lines.push(`## ${sha} — ${firstLine}`);
-          lines.push('');
-          lines.push(`*${c.author}*`);
-          lines.push('');
-          lines.push('---');
-          lines.push('');
+          lines.push(`${i + 1}. ${sha} — ${firstLine} (*${c.author}*)`);
         }
+        lines.push('');
       }
     }
 

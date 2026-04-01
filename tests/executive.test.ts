@@ -124,10 +124,10 @@ describe('renderExecutive – groupByDate mode', () => {
     expect(idxNewer).toBeLessThan(idxOlder);
   });
 
-  it('each commit produces an H2 heading with short SHA and message', () => {
+  it('each commit produces a numbered list item with short SHA, message, and author', () => {
     const md = renderExecutive(FULL_INSIGHTS, groupConfig);
-    expect(md).toContain('## def5678 — perf: database connection pooling');
-    expect(md).toContain('## abc1234 — feat: add OAuth2 login');
+    expect(md).toContain('1. def5678 — perf: database connection pooling (*bob*)');
+    expect(md).toContain('1. abc1234 — feat: add OAuth2 login (*alice*)');
   });
 
   it('renders highlights as bullets above all date groups (executive overview), without a Highlights heading', () => {
@@ -177,7 +177,7 @@ describe('renderExecutive – groupByDate mode', () => {
     const md = renderExecutive(singleInsights, groupConfig);
     expect(md).toContain('# March 20, 2026');
     expect(md).toContain('**1 commit**');
-    expect(md).toContain('## abc1234 — feat: add OAuth2 login');
+    expect(md).toContain('1. abc1234 — feat: add OAuth2 login (*alice*)');
     // Only one H1 date heading should be present
     expect(md).not.toContain('# March 27, 2026');
   });
@@ -204,13 +204,13 @@ describe('renderExecutive – groupByDate mode', () => {
     expect(md).not.toContain('## Operational Risks');
   });
 
-  it('fallback path renders H1 date headings and H2 commit headings without heuristic summaries', () => {
+  it('fallback path renders H1 date headings and numbered commit list without heuristic summaries', () => {
     // FULL_INSIGHTS has no daily_insights → fallback groupCommitsByDate path
     const md = renderExecutive(FULL_INSIGHTS, groupConfig);
     expect(md).toContain('# March 27, 2026');
     expect(md).toContain('# March 20, 2026');
-    expect(md).toContain('## def5678 — perf: database connection pooling');
-    expect(md).toContain('## abc1234 — feat: add OAuth2 login');
+    expect(md).toContain('1. def5678 — perf: database connection pooling (*bob*)');
+    expect(md).toContain('1. abc1234 — feat: add OAuth2 login (*alice*)');
     // Heuristic summaries must NOT appear in fallback path
     expect(md).not.toContain('New: add OAuth2 login');
     expect(md).not.toContain('1 maintenance');
@@ -254,12 +254,10 @@ describe('renderExecutive – daily_insights integration', () => {
     expect(riskMatches).toHaveLength(1);
   });
 
-  it('renders commits from daily_insights as H2 headings with author', () => {
+  it('renders commits from daily_insights as numbered list with author', () => {
     const md = renderExecutive(INSIGHTS_WITH_DAILY, groupConfig);
-    expect(md).toContain('## def5678 — perf: database connection pooling');
-    expect(md).toContain('*bob*');
-    expect(md).toContain('## abc1234 — feat: add OAuth2 login');
-    expect(md).toContain('*alice*');
+    expect(md).toContain('1. def5678 — perf: database connection pooling (*bob*)');
+    expect(md).toContain('1. abc1234 — feat: add OAuth2 login (*alice*)');
   });
 
   it('does not produce heuristic summarizeDay output when daily_insights present', () => {
